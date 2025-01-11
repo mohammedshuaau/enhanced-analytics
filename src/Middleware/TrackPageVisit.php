@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
+use Carbon\Carbon;
 
 class TrackPageVisit
 {
@@ -181,20 +182,68 @@ class TrackPageVisit
             Log::debug('Enhanced Analytics: Middleware called', [
                 'path' => $request->path(),
                 'ip' => $request->ip(),
-                'user_agent' => $request->userAgent()
+                'user_agent' => $request->userAgent(),
+                'session_data' => [
+                    'visitor_id' => $request->session()->get('visitor_id'),
+                    'visited_pages' => $request->session()->get('visited_pages'),
+                    'last_visit_date' => $request->session()->get('last_visit_date'),
+                    'last_visit_hour' => $request->session()->get('last_visit_hour')
+                ]
             ]);
 
             if ($this->shouldTrack($request)) {
                 Log::debug('Enhanced Analytics: Request should be tracked');
                 
-                $visitorId = $request->session()->get('visitor_id', (string) Str::uuid());
-                $request->session()->put('visitor_id', $visitorId);
+                // Get current timestamp
+                $now = now();
+                
+                // Force session regeneration for fresh tracking
+                if (!$request->session()->has('analytics_session_started')) {
+                    Log::debug('Enhanced Analytics: Regenerating session for fresh tracking');
+                    $request->session()->invalidate();
+                    $request->session()->regenerate();
+                    $request->session()->put('analytics_session_started', true);
+                }
+
+                // Generate or get visitor ID
+                $isNewVisitor = !$request->session()->has('visitor_id');
+                $visitorId = $isNewVisitor ? (string) Str::uuid() : $request->session()->get('visitor_id');
+                
+                if ($isNewVisitor) {
+                    Log::debug('Enhanced Analytics: New visitor detected');
+                    $request->session()->put('visitor_id', $visitorId);
+                    $request->session()->put('visited_pages', []);
+                    $request->session()->put('last_visit_date', null);
+                    $request->session()->put('last_visit_hour', null);
+                }
 
                 $pageUrl = $request->path();
                 $ipAddress = $request->ip();
 
                 // Get geographic data
                 $geoData = $this->getGeolocationData($ipAddress);
+
+                // Get visited pages from session
+                $visitedPages = $request->session()->get('visited_pages', []);
+                $isNewPageVisit = !in_array($pageUrl, $visitedPages);
+
+                Log::debug('Enhanced Analytics: Page visit check', [
+                    'page_url' => $pageUrl,
+                    'visited_pages' => $visitedPages,
+                    'is_new_page_visit' => $isNewPageVisit,
+                    'is_new_visitor' => $isNewVisitor,
+                    'session_id' => $request->session()->getId()
+                ]);
+
+                // Update visited pages before creating visit data
+                if ($isNewPageVisit) {
+                    $visitedPages[] = $pageUrl;
+                    $request->session()->put('visited_pages', array_unique($visitedPages));
+                }
+
+                // Get last visit timestamps
+                $lastVisitDate = $request->session()->get('last_visit_date');
+                $lastVisitHour = $request->session()->get('last_visit_hour');
 
                 $visitData = [
                     'page_url' => $pageUrl,
@@ -210,27 +259,27 @@ class TrackPageVisit
                     'user_id' => auth()->id(),
                     'session_id' => $request->session()->getId(),
                     'visitor_id' => $visitorId,
-                    'is_new_visitor' => !$request->session()->has('visitor_id'),
-                    'is_new_day_visit' => !$request->session()->has('last_visit_date') || 
-                        $request->session()->get('last_visit_date') < now()->startOfDay(),
-                    'is_new_hour_visit' => !$request->session()->has('last_visit_hour') || 
-                        $request->session()->get('last_visit_hour') < now()->startOfHour(),
-                    'is_new_page_visit' => !$request->session()->has('visited_pages') || 
-                        !in_array($pageUrl, $request->session()->get('visited_pages', [])),
-                    'visited_at' => now()->format('Y-m-d H:i:s'),
+                    'is_new_visitor' => $isNewVisitor,
+                    'is_new_day_visit' => !$lastVisitDate,
+                    'is_new_hour_visit' => !$lastVisitHour,
+                    'is_new_page_visit' => $isNewPageVisit,
+                    'visited_at' => $now->format('Y-m-d H:i:s'),
                 ];
 
                 Log::debug('Enhanced Analytics: Visit data prepared', [
                     'geo_data' => $geoData,
-                    'visit_data' => $visitData
+                    'visit_data' => $visitData,
+                    'visited_pages' => $visitedPages,
+                    'is_new_visitor' => $isNewVisitor,
+                    'is_new_page_visit' => $isNewPageVisit,
+                    'last_visit_date' => $lastVisitDate,
+                    'last_visit_hour' => $lastVisitHour,
+                    'session_id' => $request->session()->getId()
                 ]);
 
                 // Update session data
-                $request->session()->put('last_visit_date', now());
-                $request->session()->put('last_visit_hour', now());
-                $visitedPages = $request->session()->get('visited_pages', []);
-                $visitedPages[] = $pageUrl;
-                $request->session()->put('visited_pages', array_unique($visitedPages));
+                $request->session()->put('last_visit_date', $now);
+                $request->session()->put('last_visit_hour', $now);
 
                 $this->storeVisit($visitData);
             } else {

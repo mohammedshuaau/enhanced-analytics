@@ -11,7 +11,6 @@
     @push('head')
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <script>
-            console.log('Setting up Enhanced Analytics configuration...');
             window.EnhancedAnalytics = {
                 config: {
                     refreshInterval: {{ config('enhanced-analytics.dashboard.refresh_interval', 300) }},
@@ -23,183 +22,198 @@
                     }
                 }
             };
-            console.log('Enhanced Analytics configuration:', window.EnhancedAnalytics);
         </script>
     @endpush
 
     <div class="p-4">
-        <!-- Header with Settings Toggle -->
-        <header class="mb-6 flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Analytics Dashboard</h1>
-            <button id="settingsToggle" class="btn-primary flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                Settings
-            </button>
-        </header>
-
-        <!-- Settings Panel -->
-        <div id="settingsPanel" class="hidden mb-6">
-            <div class="card p-4">
-                <h2 class="text-xl font-bold mb-4">Analytics Settings</h2>
-                
-                <!-- Geolocation Stats -->
-                <div class="mb-6">
-                    <h3 class="font-bold text-gray-700 mb-2">Geolocation Statistics</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-50 p-3 rounded">
-                            <p class="text-sm text-gray-600">Total Lookups</p>
-                            <p id="totalLookups" class="text-lg font-bold">0</p>
-                        </div>
-                        <div class="bg-gray-50 p-3 rounded">
-                            <p class="text-sm text-gray-600">Success Rate</p>
-                            <p id="successRate" class="text-lg font-bold">0%</p>
-                        </div>
-                        <div class="bg-gray-50 p-3 rounded">
-                            <p class="text-sm text-gray-600">Unique IPs</p>
-                            <p id="uniqueIps" class="text-lg font-bold">0</p>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        Last Lookup: <span id="lastLookup">Never</span>
-                    </div>
+        {{-- Header with Controls --}}
+        <div class="mb-6 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <select id="dateRange" class="select-input dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <option value="24hours">Last 24 Hours</option>
+                    <option value="7days" selected>Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <div id="customDateRange" class="hidden flex items-center space-x-2">
+                    <input type="date" id="startDate" class="input-text dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <span class="dark:text-white">to</span>
+                    <input type="date" id="endDate" class="input-text dark:bg-gray-800 dark:text-white dark:border-gray-700">
                 </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="refreshData" class="btn-primary dark:bg-blue-600 dark:hover:bg-blue-700">
+                    Refresh Data
+                </button>
+                <button id="exportData" class="btn-primary dark:bg-blue-600 dark:hover:bg-blue-700">
+                    Export Data
+                </button>
+                <button id="toggleSettings" class="btn dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
 
-                <!-- Cache Management -->
-                <div class="mb-6">
-                    <h3 class="font-bold text-gray-700 mb-2">Cache Management</h3>
-                    <div class="flex items-center space-x-4">
-                        <button id="clearGeoCache" class="btn">
-                            Clear Geolocation Cache
-                        </button>
-                        <span id="cacheClearStatus" class="text-sm text-gray-500"></span>
-                    </div>
-                </div>
-
-                <!-- Current Configuration -->
+        {{-- Settings Panel --}}
+        <div id="settingsPanel" class="hidden mb-6 bg-white dark:bg-gray-800 rounded shadow-sm p-4">
+            <h3 class="text-lg font-bold mb-4 dark:text-white">Analytics Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <h3 class="font-bold text-gray-700 mb-2">Current Configuration</h3>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <dt class="text-gray-600">Cache Duration</dt>
-                                <dd>{{ config('enhanced-analytics.geolocation.cache_duration') / 60 }} hours</dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-600">Rate Limit</dt>
-                                <dd>{{ config('enhanced-analytics.geolocation.rate_limit') }} requests/minute</dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-600">Processing Frequency</dt>
-                                <dd>{{ config('enhanced-analytics.processing.frequency') }} minutes</dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-600">Dashboard Refresh</dt>
-                                <dd>{{ config('enhanced-analytics.dashboard.refresh_interval') }} seconds</dd>
-                            </div>
-                        </dl>
-                    </div>
+                    <h4 class="font-semibold mb-2 dark:text-white">Geolocation Stats</h4>
+                    <p class="dark:text-gray-300">Total Lookups: <span id="totalLookups" class="dark:text-white">0</span></p>
+                    <p class="dark:text-gray-300">Success Rate: <span id="successRate" class="dark:text-white">0%</span></p>
+                    <p class="dark:text-gray-300">Unique IPs: <span id="uniqueIps" class="dark:text-white">0</span></p>
+                    <p class="dark:text-gray-300">Last Lookup: <span id="lastLookup" class="dark:text-white">Never</span></p>
+                    <button id="clearCache" class="btn-sm mt-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">Clear Geo Cache</button>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2 dark:text-white">Current Configuration</h4>
+                    <p class="dark:text-gray-300">Cache Duration: <span class="dark:text-white">{{ config('enhanced-analytics.geolocation.cache_duration', 1440) }} minutes</span></p>
+                    <p class="dark:text-gray-300">Rate Limit: <span class="dark:text-white">{{ config('enhanced-analytics.geolocation.rate_limit', 45) }} requests/minute</span></p>
+                    <p class="dark:text-gray-300">Processing: Every <span class="dark:text-white">{{ config('enhanced-analytics.processing.frequency', 15) }} minutes</span></p>
+                    <p class="dark:text-gray-300">Dashboard Refresh: <span class="dark:text-white">{{ config('enhanced-analytics.dashboard.refresh_interval', 300) }} seconds</span></p>
                 </div>
             </div>
         </div>
-            
-        <!-- Date Range Selector -->
-        <div class="flex items-center space-x-4 mb-6">
-            <select id="timeRange" class="select-input">
-                <option value="24hours">Last 24 Hours</option>
-                <option value="7days" selected>Last 7 Days</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="custom">Custom Range</option>
-            </select>
-            
-            <div id="customDateInputs" class="hidden flex items-center space-x-2">
-                <input type="date" id="startDate" class="input-text">
-                <span>to</span>
-                <input type="date" id="endDate" class="input-text">
-            </div>
 
-            <button id="exportData" class="btn-primary">
-                Export Data
-            </button>
-        </div>
-
-        <!-- Stats Overview -->
+        {{-- Quick Stats Overview --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="card p-4">
-                <h3 class="font-bold text-gray-700">Total Visits</h3>
-                <p id="totalVisits" class="text-2xl font-bold">0</p>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold text-gray-700 dark:text-gray-300">Total Visits</h3>
+                <p id="totalVisits" class="text-2xl font-bold dark:text-white">0</p>
+                <p id="totalVisitsChange" class="text-sm text-gray-500 dark:text-gray-400">vs previous period</p>
             </div>
-            <div class="card p-4">
-                <h3 class="font-bold text-gray-700">Unique Visitors</h3>
-                <p id="uniqueVisitors" class="text-2xl font-bold">0</p>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold text-gray-700 dark:text-gray-300">Unique Visitors</h3>
+                <p id="uniqueVisitors" class="text-2xl font-bold dark:text-white">0</p>
+                <p id="uniqueVisitorsChange" class="text-sm text-gray-500 dark:text-gray-400">vs previous period</p>
             </div>
-            <div class="card p-4">
-                <h3 class="font-bold text-gray-700">Avg. Time on Site</h3>
-                <p id="avgTimeOnSite" class="text-2xl font-bold">0:00</p>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold text-gray-700 dark:text-gray-300">Engagement</h3>
+                <p id="avgTimeOnSite" class="text-2xl font-bold dark:text-white">0:00</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">avg. time on site</p>
             </div>
-            <div class="card p-4">
-                <h3 class="font-bold text-gray-700">Bounce Rate</h3>
-                <p id="bounceRate" class="text-2xl font-bold">0%</p>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold text-gray-700 dark:text-gray-300">Bounce Rate</h3>
+                <p id="bounceRate" class="text-2xl font-bold dark:text-white">0%</p>
+                <p id="bounceRateChange" class="text-sm text-gray-500 dark:text-gray-400">vs previous period</p>
             </div>
         </div>
 
-        <!-- Charts -->
+        {{-- Visitor Engagement Metrics --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Page Views Over Time -->
-            <div class="card p-4">
-                <h3 class="font-bold mb-4">Page Views Over Time</h3>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold mb-4 dark:text-white">Visit Frequency</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">New Visitors</p>
+                        <p id="newVisitors" class="text-xl font-bold dark:text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Returning Visitors</p>
+                        <p id="returningVisitors" class="text-xl font-bold dark:text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Pages/Session</p>
+                        <p id="pagesPerSession" class="text-xl font-bold dark:text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Avg. Session Duration</p>
+                        <p id="avgSessionDuration" class="text-xl font-bold dark:text-white">0:00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold mb-4 dark:text-white">Page Views Over Time</h3>
                 <div class="chart-wrapper">
                     <canvas id="pageViewsChart"></canvas>
                 </div>
             </div>
+        </div>
 
-            <!-- Device Distribution -->
-            <div class="card p-4">
-                <h3 class="font-bold mb-4">Device Distribution</h3>
-                <div class="chart-wrapper">
-                    <canvas id="deviceChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Top Countries -->
-            <div class="card p-4">
-                <h3 class="font-bold mb-4">Top Countries</h3>
+        {{-- Geographic & Technical Insights --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold mb-4 dark:text-white">Top Countries</h3>
                 <div class="chart-wrapper">
                     <canvas id="countryChart"></canvas>
                 </div>
+                <div class="mt-4">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left dark:text-gray-300">Country</th>
+                                <th class="text-right dark:text-gray-300">Visits</th>
+                                <th class="text-right dark:text-gray-300">% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="countryTable" class="dark:text-gray-400"></tbody>
+                    </table>
+                </div>
             </div>
-
-            <!-- Browser Usage -->
-            <div class="card p-4">
-                <h3 class="font-bold mb-4">Browser Usage</h3>
-                <div class="chart-wrapper">
-                    <canvas id="browserChart"></canvas>
+            <div class="card p-4 dark:bg-gray-800">
+                <h3 class="font-bold mb-4 dark:text-white">Device & Browser Stats</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 dark:text-gray-300">Devices</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="deviceChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 dark:text-gray-300">Browsers</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="browserChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Top Pages Table -->
-        <div class="card p-4">
-            <h3 class="font-bold mb-4">Top Pages</h3>
+        {{-- Page Performance --}}
+        <div class="card p-4 mb-8 dark:bg-gray-800">
+            <h3 class="font-bold mb-4 dark:text-white">Page Performance</h3>
             <div class="overflow-x-auto">
-                <table class="data-table">
+                <table class="data-table w-full">
                     <thead>
                         <tr>
-                            <th>Page URL</th>
-                            <th>Views</th>
-                            <th>Unique Views</th>
-                            <th>Avg. Time</th>
-                            <th>Bounce Rate</th>
+                            <th class="dark:text-gray-300">Page URL</th>
+                            <th class="dark:text-gray-300">Views</th>
+                            <th class="dark:text-gray-300">Unique Views</th>
+                            <th class="dark:text-gray-300">Avg. Time</th>
+                            <th class="dark:text-gray-300">Bounce Rate</th>
+                            <th class="dark:text-gray-300">Exit Rate</th>
                         </tr>
                     </thead>
-                    <tbody id="topPagesTable">
+                    <tbody id="topPagesTable" class="dark:text-gray-400">
                         <tr>
-                            <td colspan="5" class="text-center py-4">Loading data...</td>
+                            <td colspan="6" class="text-center py-4 dark:text-gray-400">Loading data...</td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        {{-- User Flow --}}
+        <div class="card p-4 dark:bg-gray-800">
+            <h3 class="font-bold mb-4 dark:text-white">User Flow</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <h4 class="font-semibold mb-2 dark:text-gray-300">Top Entry Pages</h4>
+                    <div id="entryPages" class="space-y-2 dark:text-gray-400"></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2 dark:text-gray-300">Most Engaged Pages</h4>
+                    <div id="engagedPages" class="space-y-2 dark:text-gray-400"></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2 dark:text-gray-300">Top Exit Pages</h4>
+                    <div id="exitPages" class="space-y-2 dark:text-gray-400"></div>
+                </div>
             </div>
         </div>
     </div>
