@@ -18,10 +18,19 @@ class ServiceProvider extends AddonServiceProvider
         'cp' => __DIR__.'/../routes/cp.php',
     ];
 
+    protected $middleware = [
+        Middleware\TrackPageVisit::class,
+    ];
+
     protected $middlewareGroups = [
         'web' => [
             Middleware\TrackPageVisit::class,
         ],
+    ];
+
+    protected $middlewarePriority = [
+        \Illuminate\Session\Middleware\StartSession::class,
+        Middleware\TrackPageVisit::class,
     ];
 
     protected $vite = [

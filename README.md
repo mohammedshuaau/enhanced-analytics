@@ -5,10 +5,11 @@ A powerful, efficient analytics solution for Statamic with real-time tracking, c
 ## Features
 
 - Real-time page view tracking
-- Efficient caching system using Redis
-- Comprehensive dashboard with charts and filters
+- Geographic location tracking using IP-API.com (free, no registration required)
 - Device and browser detection
-- Geographic location tracking
+- Unique visitor tracking
+- Efficient file-based caching system
+- Comprehensive dashboard with charts and filters
 - Export capabilities
 - Configurable data aggregation
 - Low-impact tracking system
@@ -17,8 +18,6 @@ A powerful, efficient analytics solution for Statamic with real-time tracking, c
 
 - PHP 8.1 or higher
 - Statamic 5.0 or higher
-- Redis (recommended for caching)
-- GeoIP2 database (for geographic data)
 
 ## Installation
 
@@ -37,92 +36,54 @@ php artisan vendor:publish --tag=enhanced-analytics-config
 php artisan migrate
 ```
 
-4. Add the scheduled command to your `app/Console/Kernel.php`:
+4. Add the following to your `app/Console/Kernel.php` in the `schedule` method:
 ```php
-protected function schedule(Schedule $schedule)
-{
-    $schedule->command('analytics:process')
-            ->everyFifteenMinutes();
-}
+$schedule->command('analytics:process')->everyFifteenMinutes();
 ```
 
 ## Configuration
 
-The configuration file is located at `config/enhanced-analytics.php`. Here you can customize:
+The configuration file is located at `config/enhanced-analytics.php`. You can customize:
 
-- Cache settings (driver, TTL)
-- Processing frequency
+- Cache settings (file driver by default)
+- IP Geolocation settings (caching duration and rate limits)
+- Processing frequency and chunk size
 - Tracking exclusions (IPs, paths, bots)
 - Dashboard refresh interval
 
 ## Usage
 
-### Accessing the Dashboard
+1. Access the analytics dashboard from the Statamic control panel under Tools > Analytics.
+2. View real-time statistics including:
+   - Total visits and unique visitors
+   - Geographic distribution of visitors
+   - Device and browser usage
+   - Page view trends
+   - Top visited pages
+3. Export data for further analysis
 
-The analytics dashboard is available in your Statamic control panel under the "Analytics" section.
+## How it Works
 
-### Dashboard Features
+1. The middleware tracks page visits and stores them in the cache
+2. A scheduled command processes the cached data every 15 minutes
+3. The dashboard displays processed data with various visualizations
+4. Data can be filtered by date range and exported as needed
 
-- Overview statistics (total visits, unique visitors, average time on site)
-- Page views over time chart
-- Device distribution
-- Geographic distribution
-- Browser usage statistics
-- Top pages
-- Custom date range filtering
-- Data export capabilities
+## Performance
 
-### Tracking Exclusions
+The addon uses an efficient caching system to minimize database load. Visit data is temporarily stored in files and processed in batches, ensuring minimal impact on your site's performance.
 
-You can exclude specific IPs or paths from being tracked by adding them to the configuration:
+### Geolocation
 
-```php
-'tracking' => [
-    'exclude_ips' => [
-        '127.0.0.1',
-    ],
-    'exclude_paths' => [
-        'cp/*',
-        '_debugbar/*',
-    ],
-    'exclude_bots' => true,
-],
-```
-
-### Data Processing
-
-The addon uses a caching system to minimize database load:
-
-1. Page visits are initially stored in cache
-2. Every 15 minutes, the cached data is processed and stored in the database
-3. The dashboard reads from the processed database data
-
-### Exporting Data
-
-You can export analytics data as CSV from the dashboard. The export includes:
-
-- Page URL
-- IP Address
-- Country
-- City
-- Device Type
-- Browser
-- Platform
-- Visit Timestamp
-
-## Performance Considerations
-
-The addon is designed to have minimal impact on your site's performance:
-
-- Page views are cached before being written to the database
-- Database operations are batched and run on a schedule
-- Aggregated data is pre-calculated for faster dashboard loading
-- Dashboard auto-refreshes can be configured or disabled
+The addon uses the free IP-API.com service for geolocation data. To ensure optimal performance and respect rate limits:
+- IP geolocation data is cached for 24 hours by default
+- Rate limiting is set to 45 requests per minute (free tier limit)
+- Local and private IP addresses are automatically skipped
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-This addon is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for details.
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

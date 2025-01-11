@@ -227,4 +227,16 @@ class AnalyticsDashboardController
             fclose($output);
         }, 'analytics-export-' . Carbon::now()->format('Y-m-d') . '.csv');
     }
+
+    public function getGeolocationStats()
+    {
+        $stats = \Mohammedshuaau\EnhancedAnalytics\Middleware\TrackPageVisit::getGeolocationStats();
+        return response()->json($stats);
+    }
+
+    public function clearGeolocationCache()
+    {
+        \Mohammedshuaau\EnhancedAnalytics\Middleware\TrackPageVisit::clearGeolocationCache();
+        return response()->json(['message' => 'Cache cleared successfully']);
+    }
 } 

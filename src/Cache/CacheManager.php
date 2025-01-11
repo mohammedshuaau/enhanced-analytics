@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redis;
 use Carbon\Carbon;
 use RuntimeException;
+use Illuminate\Support\Facades\Log;
 
 class CacheManager
 {
@@ -172,9 +173,18 @@ class CacheManager
     {
         try {
             $path = $this->getFilePath($key);
+            Log::debug('Enhanced Analytics: Storing file data', [
+                'key' => $key,
+                'path' => $path,
+                'data' => $data
+            ]);
             File::put($path, json_encode($data), true);
             chmod($path, $this->config['file']['permissions']['file']);
         } catch (\Exception $e) {
+            Log::error('Enhanced Analytics: Failed to store data in file', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new RuntimeException("Failed to store data in file: {$e->getMessage()}");
         }
     }
@@ -183,12 +193,26 @@ class CacheManager
     {
         try {
             $path = $this->getFilePath($key);
+            Log::debug('Enhanced Analytics: Getting file data', [
+                'key' => $key,
+                'path' => $path,
+                'exists' => File::exists($path)
+            ]);
             if (!File::exists($path)) {
                 return [];
             }
             $content = File::get($path);
-            return json_decode($content, true) ?: [];
+            $data = json_decode($content, true) ?: [];
+            Log::debug('Enhanced Analytics: Retrieved file data', [
+                'key' => $key,
+                'data' => $data
+            ]);
+            return $data;
         } catch (\Exception $e) {
+            Log::error('Enhanced Analytics: Failed to retrieve data from file', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new RuntimeException("Failed to retrieve data from file: {$e->getMessage()}");
         }
     }

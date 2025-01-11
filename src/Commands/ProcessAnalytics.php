@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Mohammedshuaau\EnhancedAnalytics\Cache\CacheManager;
 use Illuminate\Cache\Lock;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAnalytics extends Command
 {
@@ -94,25 +95,63 @@ class ProcessAnalytics extends Command
 
     protected function processVisits(array $visits)
     {
-        $now = Carbon::now();
-        
-        // Prepare bulk insert data
-        $records = array_map(function ($visit) use ($now) {
-            // Ensure user_id is either null or a numeric value
-            $userId = isset($visit['user_id']) && is_numeric($visit['user_id']) ? $visit['user_id'] : null;
+        try {
+            $now = Carbon::now();
             
-            return array_merge($visit, [
-                'created_at' => $now,
-                'updated_at' => $now,
-                'user_id' => $userId,
+            Log::debug('Enhanced Analytics: Processing visits', [
+                'count' => count($visits),
+                'first_visit' => isset($visits[0]) ? $visits[0] : null
             ]);
-        }, $visits);
+            
+            // Prepare bulk insert data
+            $records = array_map(function ($visit) use ($now) {
+                if (!is_array($visit)) {
+                    Log::error('Enhanced Analytics: Invalid visit data', [
+                        'visit' => $visit,
+                        'type' => gettype($visit)
+                    ]);
+                    return null;
+                }
+                
+                // Ensure user_id is either null or a numeric value
+                $userId = isset($visit['user_id']) && is_numeric($visit['user_id']) ? $visit['user_id'] : null;
+                
+                // Format the visited_at datetime
+                $visitedAt = isset($visit['visited_at']) ? Carbon::parse($visit['visited_at'])->format('Y-m-d H:i:s') : $now->format('Y-m-d H:i:s');
+                
+                return array_merge($visit, [
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                    'user_id' => $userId,
+                    'visited_at' => $visitedAt
+                ]);
+            }, $visits);
 
-        // Bulk insert
-        DB::table('enhanced_analytics_page_views')->insert($records);
+            // Filter out any null records
+            $records = array_filter($records);
 
-        // Update aggregates
-        $this->updateAggregates($visits);
+            if (empty($records)) {
+                Log::warning('Enhanced Analytics: No valid records to process');
+                return;
+            }
+
+            Log::debug('Enhanced Analytics: Prepared records for insertion', [
+                'count' => count($records),
+                'sample' => isset($records[0]) ? $records[0] : null
+            ]);
+
+            // Bulk insert
+            DB::table('enhanced_analytics_page_views')->insert($records);
+
+            // Update aggregates
+            $this->updateAggregates($visits);
+        } catch (\Exception $e) {
+            Log::error('Enhanced Analytics: Error processing visits', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     protected function updateAggregates(array $visits)
@@ -124,33 +163,78 @@ class ProcessAnalytics extends Command
             'platform'
         ];
 
+        Log::debug('Enhanced Analytics: Processing aggregates', [
+            'total_visits' => count($visits),
+            'dimensions' => $dimensions
+        ]);
+
         foreach ($visits as $visit) {
-            $date = Carbon::parse($visit['visited_at'])->startOfDay();
+            if (!is_array($visit)) {
+                Log::warning('Enhanced Analytics: Invalid visit data in aggregates', [
+                    'visit' => $visit,
+                    'type' => gettype($visit)
+                ]);
+                continue;
+            }
+
+            $date = Carbon::parse($visit['visited_at'])->toDateString();
 
             foreach ($dimensions as $dimension) {
                 if (!isset($visit[$dimension]) || empty($visit[$dimension])) {
+                    Log::debug('Enhanced Analytics: Missing dimension value', [
+                        'dimension' => $dimension,
+                        'visit' => $visit
+                    ]);
                     continue;
                 }
 
-                $this->updateAggregate('daily', $date, $dimension, $visit[$dimension]);
+                $value = $visit[$dimension];
+                Log::debug('Enhanced Analytics: Processing dimension', [
+                    'dimension' => $dimension,
+                    'value' => $value,
+                    'date' => $date
+                ]);
+
+                $this->updateAggregate('daily', $date, $dimension, $value, $visit);
             }
         }
     }
 
-    protected function updateAggregate($type, $date, $dimension, $value)
+    protected function updateAggregate($type, $date, $dimension, $value, array $visit)
     {
-        DB::table('enhanced_analytics_aggregates')
-            ->updateOrInsert(
-                [
-                    'type' => $type,
-                    'date' => $date,
-                    'dimension' => $dimension,
-                    'dimension_value' => $value,
-                ],
-                [
-                    'total_visits' => DB::raw('total_visits + 1'),
-                    'updated_at' => Carbon::now(),
-                ]
-            );
+        try {
+            Log::debug('Enhanced Analytics: Updating aggregate', [
+                'type' => $type,
+                'date' => $date,
+                'dimension' => $dimension,
+                'value' => $value,
+                'visit' => $visit
+            ]);
+
+            DB::table('enhanced_analytics_aggregates')
+                ->updateOrInsert(
+                    [
+                        'type' => $type,
+                        'date' => $date,
+                        'dimension' => $dimension,
+                        'dimension_value' => $value,
+                    ],
+                    [
+                        'total_visits' => DB::raw('COALESCE(total_visits, 0) + 1'),
+                        'unique_visitors' => DB::raw('COALESCE(unique_visitors, 0) + ' . ($visit['is_new_visitor'] ? '1' : '0')),
+                        'unique_page_views' => DB::raw('COALESCE(unique_page_views, 0) + ' . ($visit['is_new_page_visit'] ? '1' : '0')),
+                        'returning_visitors' => DB::raw('COALESCE(returning_visitors, 0) + ' . (!$visit['is_new_visitor'] ? '1' : '0')),
+                        'updated_at' => Carbon::now(),
+                    ]
+                );
+
+            Log::debug('Enhanced Analytics: Updated aggregate successfully');
+        } catch (\Exception $e) {
+            Log::error('Enhanced Analytics: Error updating aggregate', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 } 

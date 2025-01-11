@@ -37,15 +37,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const startDate = document.getElementById('startDate');
         const endDate = document.getElementById('endDate');
         const exportButton = document.getElementById('exportData');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const clearGeoCache = document.getElementById('clearGeoCache');
 
         // Initialize everything
         initializeCharts();
         setupEventListeners(timeRange, customDateInputs, startDate, endDate, exportButton);
+        setupSettingsPanel(settingsToggle, settingsPanel, clearGeoCache);
         fetchData(timeRange, startDate, endDate);
+        fetchGeolocationStats();
 
         // Set up auto-refresh
         const refreshInterval = window.EnhancedAnalytics.config.refreshInterval || 300;
-        setInterval(() => fetchData(timeRange, startDate, endDate), refreshInterval * 1000);
+        setInterval(() => {
+            fetchData(timeRange, startDate, endDate);
+            fetchGeolocationStats();
+        }, refreshInterval * 1000);
     }, 100); // Small delay to ensure configuration is loaded
 });
 
@@ -222,15 +230,15 @@ function updateDeviceChart(data) {
 
 function updateCountryChart(data) {
     if (!Array.isArray(data)) return;
-    countryChart.data.labels = data.map(item => item.country);
-    countryChart.data.datasets[0].data = data.map(item => item.visits);
+    countryChart.data.labels = data.map(item => item.dimension_value);
+    countryChart.data.datasets[0].data = data.map(item => item.total);
     countryChart.update();
 }
 
 function updateBrowserChart(data) {
-    if (!data) return;
-    browserChart.data.labels = Object.keys(data);
-    browserChart.data.datasets[0].data = Object.values(data);
+    if (!Array.isArray(data)) return;
+    browserChart.data.labels = data.map(item => item.dimension_value);
+    browserChart.data.datasets[0].data = data.map(item => item.total);
     browserChart.update();
 }
 
@@ -252,4 +260,73 @@ function formatDuration(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function setupSettingsPanel(settingsToggle, settingsPanel, clearGeoCache) {
+    // Toggle settings panel
+    settingsToggle.addEventListener('click', () => {
+        settingsPanel.classList.toggle('hidden');
+    });
+
+    // Clear geolocation cache
+    clearGeoCache.addEventListener('click', async () => {
+        try {
+            const status = document.getElementById('cacheClearStatus');
+            status.textContent = 'Clearing cache...';
+            clearGeoCache.disabled = true;
+
+            const response = await fetch(window.EnhancedAnalytics.config.routes.clearCache, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to clear cache');
+
+            const data = await response.json();
+            status.textContent = data.message || 'Cache cleared successfully!';
+            setTimeout(() => {
+                status.textContent = '';
+            }, 3000);
+
+            // Refresh geolocation stats
+            fetchGeolocationStats();
+        } catch (error) {
+            console.error('Error clearing cache:', error);
+            document.getElementById('cacheClearStatus').textContent = 'Failed to clear cache';
+        } finally {
+            clearGeoCache.disabled = false;
+        }
+    });
+}
+
+async function fetchGeolocationStats() {
+    try {
+        const response = await fetch(window.EnhancedAnalytics.config.routes.geoStats);
+        if (!response.ok) throw new Error('Failed to fetch geolocation stats');
+
+        const stats = await response.json();
+        updateGeolocationStats(stats);
+    } catch (error) {
+        console.error('Error fetching geolocation stats:', error);
+    }
+}
+
+function updateGeolocationStats(stats) {
+    document.getElementById('totalLookups').textContent = stats.total_lookups.toLocaleString();
+
+    const successRate = stats.total_lookups > 0
+        ? ((stats.successful_lookups / stats.total_lookups) * 100).toFixed(1)
+        : 0;
+    document.getElementById('successRate').textContent = `${successRate}%`;
+
+    document.getElementById('uniqueIps').textContent = stats.unique_ips.length.toLocaleString();
+
+    const lastLookup = stats.last_lookup
+        ? new Date(stats.last_lookup).toLocaleString()
+        : 'Never';
+    document.getElementById('lastLookup').textContent = lastLookup;
 }
