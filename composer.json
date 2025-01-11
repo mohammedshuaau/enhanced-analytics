@@ -1,0 +1,54 @@
+{
+    "name": "mohammedshuaau/enhanced-analytics",
+    "description": "A powerful, efficient analytics solution for Statamic with real-time tracking, caching, and comprehensive dashboard visualization.",
+    "type": "statamic-addon",
+    "autoload": {
+        "psr-4": {
+            "Mohammedshuaau\\EnhancedAnalytics\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mohammedshuaau\\EnhancedAnalytics\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Enhanced Analytics",
+            "description": "A powerful, efficient analytics solution for Statamic"
+        },
+        "laravel": {
+            "providers": [
+                "Mohammedshuaau\\EnhancedAnalytics\\ServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "statamic/cms": "^5.0",
+        "jenssegers/agent": "^2.6",
+        "predis/predis": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "laravel-mix": "^6.0",
+        "vue-loader": "^17.0",
+        "vue": "^3.0",
+        "chart.js": "^4.0",
+        "@vue/compiler-sfc": "^3.0"
+    },
+    "scripts": {
+        "dev": "npm run development",
+        "development": "mix",
+        "watch": "mix watch",
+        "watch-poll": "mix watch -- --watch-options-poll=1000",
+        "hot": "mix watch --hot",
+        "prod": "npm run production",
+        "production": "mix --production"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": true
+        }
+    }
+}

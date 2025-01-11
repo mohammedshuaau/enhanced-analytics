@@ -1,0 +1,68 @@
+/* Chart containers */
+.card canvas {
+    height: 300px !important;
+    max-height: 300px !important;
+}
+
+/* Chart wrapper */
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Table styles */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+}
+
+.data-table tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Custom date inputs */
+.input-text {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+/* Select input */
+.select-input {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    appearance: none;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+}
