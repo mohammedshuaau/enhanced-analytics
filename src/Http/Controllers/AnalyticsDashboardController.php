@@ -21,6 +21,13 @@ class AnalyticsDashboardController
         $startDate = $this->getStartDate($range, $request);
         $endDate = Carbon::now();
 
+        if ($range === 'custom') {
+            if ($request->input('start_date') && $request->input('end_date')) {
+                $startDate = Carbon::parse($request->input('start_date'));
+                $endDate = Carbon::parse($request->input('end_date'));
+            }
+        }
+
         // Get previous period for comparisons
         $periodLength = $startDate->diffInDays($endDate);
         $previousStartDate = $startDate->copy()->subDays($periodLength);
@@ -252,7 +259,7 @@ class AnalyticsDashboardController
 
         return response()->streamDownload(function () use ($data) {
             $output = fopen('php://output', 'w');
-            
+
             // Headers
             fputcsv($output, [
                 'Page URL',
@@ -441,4 +448,4 @@ class AnalyticsDashboardController
             'exit_pages' => $exitPages
         ];
     }
-} 
+}

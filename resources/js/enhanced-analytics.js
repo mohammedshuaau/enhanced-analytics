@@ -284,7 +284,7 @@ function updateUserFlow(flow) {
     const entryPages = document.getElementById('entryPages');
     entryPages.innerHTML = flow.entry_pages.map(page => `
         <div class="flex justify-between items-center">
-            <span class="truncate">${page.url}</span>
+            <span class="truncate">${page.page_url}</span>
             <span class="text-gray-500">${page.count.toLocaleString()}</span>
         </div>
     `).join('');

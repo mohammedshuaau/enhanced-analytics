@@ -32,7 +32,7 @@ var So=Object.defineProperty;var Po=(i,t,e)=>t in i?So(i,t,{enumerable:!0,config
         </tr>
     `).join("")}function $h(i){if(!i)return;const t=document.getElementById("entryPages");t.innerHTML=i.entry_pages.map(n=>`
         <div class="flex justify-between items-center">
-            <span class="truncate">${n.url}</span>
+            <span class="truncate">${n.page_url}</span>
             <span class="text-gray-500">${n.count.toLocaleString()}</span>
         </div>
     `).join("");const e=document.getElementById("engagedPages");e.innerHTML=i.engaged_pages.map(n=>`

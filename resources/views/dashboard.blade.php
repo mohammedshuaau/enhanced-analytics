@@ -59,7 +59,7 @@
         </div>
 
         {{-- Settings Panel --}}
-        <div id="settingsPanel" class="hidden mb-6 bg-white dark:bg-gray-800 rounded shadow-sm p-4">
+        <div id="settingsPanel" class="card hidden mb-6 dark:bg-gray-800 rounded shadow-sm p-4">
             <h3 class="text-lg font-bold mb-4 dark:text-white">Analytics Settings</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -68,7 +68,7 @@
                     <p class="dark:text-gray-300">Success Rate: <span id="successRate" class="dark:text-white">0%</span></p>
                     <p class="dark:text-gray-300">Unique IPs: <span id="uniqueIps" class="dark:text-white">0</span></p>
                     <p class="dark:text-gray-300">Last Lookup: <span id="lastLookup" class="dark:text-white">Never</span></p>
-                    <button id="clearCache" class="btn-sm mt-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">Clear Geo Cache</button>
+                    <button id="clearCache" class="btn-primary dark:bg-blue-600 dark:hover:bg-blue-700 mt-2">Clear Geo Cache</button>
                 </div>
                 <div>
                     <h4 class="font-semibold mb-2 dark:text-white">Current Configuration</h4>
@@ -158,13 +158,13 @@
             <div class="card p-4 dark:bg-gray-800">
                 <h3 class="font-bold mb-4 dark:text-white">Device & Browser Stats</h3>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
+                    <div class="flex w-1/2">
                         <h4 class="font-semibold mb-2 dark:text-gray-300">Devices</h4>
-                        <div class="chart-wrapper">
+                        <div class="chart-wrapper flex items-center justify-center">
                             <canvas id="deviceChart"></canvas>
                         </div>
                     </div>
-                    <div>
+                    <div class="flex w-1/2">
                         <h4 class="font-semibold mb-2 dark:text-gray-300">Browsers</h4>
                         <div class="chart-wrapper">
                             <canvas id="browserChart"></canvas>
@@ -225,4 +225,4 @@
 
     {{-- Load our enhanced analytics script --}}
     @vite(['resources/js/enhanced-analytics.js'], 'vendor/enhanced-analytics')
-@endpush 
+@endpush
