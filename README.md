@@ -129,9 +129,13 @@ The addon includes a privacy-focused consent banner that's disabled by default. 
 
 1. Enable the consent banner by setting `tracking.consent.enabled` to `true` in your config file.
 
-2. Add the consent banner to your layout:
+2. Add the consent banner and CSRF token (header meta tag) to your layout:
 ```antlers
 {{ enhanced_analytics:consent_banner }}
+```
+
+```html
+<meta name="csrf-token" content="{{ csrf_token }}">
 ```
 
 3. Customize the banner appearance and text:
