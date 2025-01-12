@@ -1,23 +1,56 @@
 # Enhanced Analytics for Statamic
 
-A powerful, efficient analytics solution for Statamic with real-time tracking, caching, and comprehensive dashboard visualization.
+A powerful analytics addon for Statamic that provides detailed insights into your website's traffic and user behavior.
 
 ## Features
 
-- Real-time page view tracking
-- Geographic location tracking using IP-API.com (free, no registration required)
-- Device and browser detection
-- Unique visitor tracking
-- Efficient file-based caching system
-- Comprehensive dashboard with charts and filters
-- Export capabilities
-- Configurable data aggregation
-- Low-impact tracking system
+### Real-Time Analytics
+- Page view tracking with automatic data processing
+- Unique visitor identification and session management
+- Configurable processing frequency (default: every 15 minutes)
+- Automatic data aggregation for efficient querying
 
-## Requirements
+### Visitor Insights
+- Total visits and unique visitors
+- New vs returning visitors
+- Session duration and pages per session
+- Bounce rate and exit rate analysis
+- User flow tracking (entry pages, engaged pages, exit pages)
 
-- PHP 8.1 or higher
-- Statamic 5.0 or higher
+### Geographic Data
+- IP-based geolocation using ip-api.com
+- Country and city-level tracking
+- Built-in rate limiting (45 requests/minute)
+- Automatic caching of geolocation data
+- Configurable cache duration
+
+### Technical Insights
+- Device type tracking (desktop, mobile, tablet)
+- Browser and platform detection
+- Referrer URL tracking
+- User agent analysis
+
+### Performance Features
+- Efficient data caching system
+- Support for both file caching
+- Automatic cleanup of old data
+- Chunk-based processing to prevent memory issues
+- Lock system to prevent concurrent processing
+
+### Dashboard Features
+- Clean, modern interface with dark mode support
+- Polled data refresh
+- Customizable date ranges (24h, 7d, 30d, custom)
+- Comparative metrics with previous periods
+- Export functionality for detailed analysis
+- Interactive charts and visualizations
+
+### Privacy & Security
+- No external service dependencies
+- Complete data ownership
+- Configurable IP address exclusions
+- Bot filtering
+- Authenticated user tracking options
 
 ## Installation
 
@@ -26,7 +59,7 @@ A powerful, efficient analytics solution for Statamic with real-time tracking, c
 composer require mohammedshuaau/enhanced-analytics
 ```
 
-2. Publish the configuration file:
+2. Publish the configuration:
 ```bash
 php artisan vendor:publish --tag=enhanced-analytics-config
 ```
@@ -36,53 +69,100 @@ php artisan vendor:publish --tag=enhanced-analytics-config
 php artisan migrate
 ```
 
-4. Add the following to your `app/Console/Kernel.php` in the `schedule` method:
-```php
-$schedule->command('analytics:process')->everyFifteenMinutes();
-```
-
 ## Configuration
 
-The configuration file is located at `config/enhanced-analytics.php`. You can customize:
+The addon can be configured via the `config/enhanced-analytics.php` file:
 
-- Cache settings (file driver by default)
-- IP Geolocation settings (caching duration and rate limits)
-- Processing frequency and chunk size
-- Tracking exclusions (IPs, paths, bots)
-- Dashboard refresh interval
+```php
+return [
+    'cache' => [
+        'driver' => 'file', // Options: 'file', 'redis'
+        'file' => [
+            'path' => storage_path('app/enhanced-analytics'),
+            'permissions' => [
+                'file' => 0644,
+                'directory' => 0755
+            ]
+        ]
+    ],
+
+    'geolocation' => [
+        'cache_duration' => 1440, // 24 hours
+        'rate_limit' => 45 // requests per minute
+    ],
+
+    'processing' => [
+        'frequency' => 15, // minutes
+        'chunk_size' => 1000,
+        'lock_timeout' => 60
+    ],
+
+    'tracking' => [
+        'exclude_paths' => [
+            'cp/*',
+            'api/*'
+        ],
+        'exclude_ips' => [],
+        'exclude_bots' => true,
+        'track_authenticated_users' => true
+    ]
+];
+```
 
 ## Usage
 
-1. Access the analytics dashboard from the Statamic control panel under Tools > Analytics.
-2. View real-time statistics including:
-   - Total visits and unique visitors
-   - Geographic distribution of visitors
-   - Device and browser usage
-   - Page view trends
-   - Top visited pages
-3. Export data for further analysis
+Once installed, the addon will automatically start tracking page visits. Access the analytics dashboard via the Control Panel under Tools > Analytics.
 
-## How it Works
+### Automatic Processing
 
-1. The middleware tracks page visits and stores them in the cache
-2. A scheduled command processes the cached data every 15 minutes
-3. The dashboard displays processed data with various visualizations
-4. Data can be filtered by date range and exported as needed
+The addon automatically processes analytics data via Scheduler. You might want to run the scheduler and the addon will handle the rest. You can always set the minutes the command should execute.
 
-## Performance
+### Manual Processing
 
-The addon uses an efficient caching system to minimize database load. Visit data is temporarily stored in files and processed in batches, ensuring minimal impact on your site's performance.
+You can manually process analytics data using the command:
+```bash
+php artisan analytics:process
+```
 
-### Geolocation
+### Data Export
 
-The addon uses the free IP-API.com service for geolocation data. To ensure optimal performance and respect rate limits:
-- IP geolocation data is cached for 24 hours by default
-- Rate limiting is set to 45 requests per minute (free tier limit)
-- Local and private IP addresses are automatically skipped
+Export detailed analytics data directly from the dashboard in CSV format for further analysis.
+
+## Performance Considerations
+
+- The addon uses efficient caching and processes data in chunks to maintain performance
+- Geolocation data is cached to respect API rate limits
+- Database queries are optimized using aggregates for faster dashboard loading
+- Automatic cleanup of old cache data
+
+### Upcoming Features
+
+- Support for Redis Driver
+
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are always welcome!
+
+### Development Guidelines
+
+- Follow PSR-12 coding standards
+- Add appropriate comments and documentation
+- Update the README.md with details of significant changes
+- Add/update tests as needed
+- Ensure all tests pass before submitting PR
+
+### Testing
+
+Run the test suite:
+```bash
+vendor/bin/phpunit
+```
+
+## Support
+
+If you discover any security-related issues, please use the issue tracker to report them.
+
 
 ## License
 
