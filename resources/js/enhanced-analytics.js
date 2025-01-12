@@ -10,6 +10,10 @@ let pageViewsChart, deviceChart, countryChart, browserChart;
 
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', function () {
+    if (!window.location.pathname.includes(`/enhanced-analytics`)) {
+        return;
+    }
+
     initializeCharts();
     setupEventListeners();
     fetchData();
