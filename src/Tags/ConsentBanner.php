@@ -3,10 +3,8 @@
 namespace Mohammedshuaau\EnhancedAnalytics\Tags;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\View;
-use Statamic\Tags\Tags;
-use Statamic\View\Cascade;
 use Statamic\Facades\File;
+use Statamic\Tags\Tags;
 
 class ConsentBanner extends Tags
 {

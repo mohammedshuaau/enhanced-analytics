@@ -5,20 +5,10 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/js/consent-banner.js',
-                'resources/js/enhanced-analytics.js'
+                'resources/css/enhanced-analytics.css'
             ],
-            publicDirectory: 'resources/dist',
-            buildDirectory: 'build'
+            //publicDirectory: 'resources/dist',
+            //buildDirectory: 'build'
         }),
-    ],
-    build: {
-        rollupOptions: {
-            output: {
-                manualChunks: {
-                    'alpine': ['alpinejs']
-                }
-            }
-        }
-    }
+    ]
 });

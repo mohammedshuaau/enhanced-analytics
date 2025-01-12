@@ -39,27 +39,13 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $vite = [
         'input' => [
-            'resources/js/enhanced-analytics.js',
-            'resources/js/consent-banner.js',
             'resources/css/enhanced-analytics.css'
         ],
-        'publicDirectory' => 'resources/dist',
+        //'publicDirectory' => 'resources/dist',
     ];
 
     public function bootAddon()
     {
-        // Register route for serving the consent banner script
-        $this->app->make('router')->get('/enhanced-analytics/js/consent-banner.js', function () {
-            $path = __DIR__ . '/../resources/dist/js/consent-banner.js';
-
-            if (!file_exists($path)) {
-                return response('console.error("Consent banner script not found");', 404)
-                    ->header('Content-Type', 'application/javascript');
-            }
-
-            return response()->file($path, ['Content-Type' => 'application/javascript']);
-        });
-
         // Publish configuration
         $this->publishes([
             __DIR__ . '/../config/enhanced-analytics.php' => config_path('enhanced-analytics.php'),
