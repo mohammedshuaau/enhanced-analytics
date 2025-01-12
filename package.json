@@ -6,6 +6,9 @@
         "build": "vite build",
         "watch": "vite build --watch"
     },
+    "dependencies": {
+        "alpinejs": "^3.13.3"
+    },
     "devDependencies": {
         "chart.js": "^4.4.7",
         "laravel-vite-plugin": "^1.0.0",

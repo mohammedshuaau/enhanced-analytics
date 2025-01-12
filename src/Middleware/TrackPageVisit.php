@@ -161,17 +161,44 @@ class TrackPageVisit
     public function handle(Request $request, Closure $next)
     {
         try {
-
             if ($this->shouldTrack($request)) {
-
                 // Get current timestamp
                 $now = now();
 
+                Log::debug('Enhanced Analytics: Before session check', [
+                    'session_id' => session()->getId(),
+                    'has_session_started' => session()->has('analytics_session_started'),
+                    'consent_value' => session('analytics_consent'),
+                    'consent_settings' => session('analytics_settings')
+                ]);
+
+                // Store consent value before session regeneration
+                $consentValue = session('analytics_consent');
+                $consentSettings = session('analytics_settings');
+
                 // Force session regeneration for fresh tracking
                 if (!$request->session()->has('analytics_session_started')) {
+                    Log::debug('Enhanced Analytics: Regenerating session', [
+                        'old_session_id' => session()->getId(),
+                        'stored_consent' => $consentValue,
+                        'stored_settings' => $consentSettings
+                    ]);
+
                     $request->session()->invalidate();
                     $request->session()->regenerate();
                     $request->session()->put('analytics_session_started', true);
+                    
+                    // Restore consent value after session regeneration
+                    if (!is_null($consentValue)) {
+                        $request->session()->put('analytics_consent', $consentValue);
+                        $request->session()->put('analytics_settings', $consentSettings);
+                    }
+
+                    Log::debug('Enhanced Analytics: After session regeneration', [
+                        'new_session_id' => session()->getId(),
+                        'current_consent' => session('analytics_consent'),
+                        'current_settings' => session('analytics_settings')
+                    ]);
                 }
 
                 // Generate or get visitor ID
@@ -246,6 +273,34 @@ class TrackPageVisit
 
     protected function shouldTrack(Request $request): bool
     {
+        // Check if consent is enabled and given
+        if (config('enhanced-analytics.tracking.consent.enabled', true)) {
+            $consent = session('analytics_consent');
+            Log::debug('Enhanced Analytics: Checking consent', [
+                'consent_value' => $consent,
+                'session_id' => session()->getId(),
+                'all_session_data' => session()->all()
+            ]);
+
+            // If consent is required but no action taken (null), don't track
+            if (is_null($consent)) {
+                Log::debug('Enhanced Analytics: No consent action taken');
+                return false;
+            }
+            // If user explicitly declined (false), don't track
+            if ($consent === false) {
+                Log::debug('Enhanced Analytics: Consent explicitly declined');
+                return false;
+            }
+            // At this point, consent must be true to continue
+            if ($consent !== true) {
+                Log::debug('Enhanced Analytics: Consent not explicitly granted');
+                return false;
+            }
+
+            Log::debug('Enhanced Analytics: Consent granted, proceeding with tracking');
+        }
+
         // Get excluded paths and IPs from config
         $excludedPaths = config('enhanced-analytics.tracking.exclude_paths', []);
         $excludedIps = config('enhanced-analytics.tracking.exclude_ips', []);

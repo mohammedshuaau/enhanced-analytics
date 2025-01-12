@@ -1,4 +1,9 @@
 import { Chart } from 'chart.js/auto';
+import Alpine from 'alpinejs';
+
+// Initialize Alpine.js
+window.Alpine = Alpine;
+Alpine.start();
 
 // Chart.js instances
 let pageViewsChart, deviceChart, countryChart, browserChart;

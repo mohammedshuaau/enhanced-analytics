@@ -15,6 +15,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $routes = [
         'cp' => __DIR__ . '/../routes/cp.php',
+        'web' => __DIR__ . '/../routes/web.php',
     ];
 
     protected $middleware = [
@@ -32,9 +33,14 @@ class ServiceProvider extends AddonServiceProvider
         Middleware\TrackPageVisit::class,
     ];
 
+    protected $tags = [
+        Tags\ConsentBanner::class,
+    ];
+
     protected $vite = [
         'input' => [
             'resources/js/enhanced-analytics.js',
+            'resources/js/consent-banner.js',
             'resources/css/enhanced-analytics.css'
         ],
         'publicDirectory' => 'resources/dist',
@@ -42,6 +48,30 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon()
     {
+        // Add debug logging
+        \Illuminate\Support\Facades\Log::debug('Enhanced Analytics ServiceProvider booting', [
+            'registered_tags' => $this->tags,
+            'tag_exists' => class_exists(\Mohammedshuaau\EnhancedAnalytics\Tags\ConsentBanner::class)
+        ]);
+
+        // Register route for serving the consent banner script
+        $this->app->make('router')->get('/enhanced-analytics/js/consent-banner.js', function () {
+            $path = __DIR__ . '/../resources/dist/js/consent-banner.js';
+            
+            \Illuminate\Support\Facades\Log::debug('Consent banner script requested', [
+                'path' => $path,
+                'exists' => file_exists($path),
+                'content' => file_exists($path) ? file_get_contents($path) : 'File not found'
+            ]);
+
+            if (!file_exists($path)) {
+                return response('console.error("Consent banner script not found");', 404)
+                    ->header('Content-Type', 'application/javascript');
+            }
+
+            return response()->file($path, ['Content-Type' => 'application/javascript']);
+        });
+
         // Publish configuration
         $this->publishes([
             __DIR__ . '/../config/enhanced-analytics.php' => config_path('enhanced-analytics.php'),
@@ -62,9 +92,6 @@ class ServiceProvider extends AddonServiceProvider
                 ->route('enhanced-analytics.index')
                 ->icon('charts');
         });
-
-        // Load views
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'enhanced-analytics');
 
         // Load migrations
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

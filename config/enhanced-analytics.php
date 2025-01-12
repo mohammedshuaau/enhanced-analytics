@@ -69,6 +69,17 @@ return [
         ],
         'exclude_bots' => true,
         'track_authenticated_users' => true,
+        'consent' => [
+            'enabled' => true,
+            'banner' => [
+                'title' => 'Privacy Notice',
+                'description' => 'We use analytics to understand how you use our website and improve your experience.',
+                'accept_button' => 'Accept',
+                'decline_button' => 'Decline',
+                'settings_button' => 'Customize',
+                'position' => 'bottom', // options: bottom, top, center
+            ],
+        ],
     ],
 
     /*

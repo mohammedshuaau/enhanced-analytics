@@ -1,13 +1,24 @@
 {
-  "resources/css/enhanced-analytics.css": {
-    "file": "assets/enhanced-analytics-ABnOaMnr.css",
-    "src": "resources/css/enhanced-analytics.css",
-    "isEntry": true
+  "_alpine-CLWRBzRS.js": {
+    "file": "assets/alpine-CLWRBzRS.js",
+    "name": "alpine"
+  },
+  "resources/js/consent-banner.js": {
+    "file": "assets/consent-banner-af7rND8f.js",
+    "name": "consent-banner",
+    "src": "resources/js/consent-banner.js",
+    "isEntry": true,
+    "imports": [
+      "_alpine-CLWRBzRS.js"
+    ]
   },
   "resources/js/enhanced-analytics.js": {
-    "file": "assets/enhanced-analytics-HuAGwLIu.js",
+    "file": "assets/enhanced-analytics-DR3kBP2L.js",
     "name": "enhanced-analytics",
     "src": "resources/js/enhanced-analytics.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alpine-CLWRBzRS.js"
+    ]
   }
 }
