@@ -1,0 +1,13 @@
+{
+  "resources/css/enhanced-analytics.css": {
+    "file": "assets/enhanced-analytics-ChtSGYVp.css",
+    "src": "resources/css/enhanced-analytics.css",
+    "isEntry": true
+  },
+  "resources/js/enhanced-analytics.js": {
+    "file": "assets/enhanced-analytics-loCUKF1I.js",
+    "name": "enhanced-analytics",
+    "src": "resources/js/enhanced-analytics.js",
+    "isEntry": true
+  }
+}

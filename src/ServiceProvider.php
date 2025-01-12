@@ -39,9 +39,12 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $vite = [
         'input' => [
-            'resources/css/enhanced-analytics.css'
+            'resources/css/enhanced-analytics.css',
+            'resources/js/enhanced-analytics.js'
+
         ],
-        //'publicDirectory' => 'resources/dist',
+        'publicDirectory' => 'public',
+        'buildDirectory' => 'dist'
     ];
 
     public function bootAddon()

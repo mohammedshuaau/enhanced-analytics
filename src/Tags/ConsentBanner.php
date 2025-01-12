@@ -2,6 +2,7 @@
 
 namespace Mohammedshuaau\EnhancedAnalytics\Tags;
 
+use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\Log;
 use Statamic\Facades\File;
 use Statamic\Tags\Tags;
@@ -69,5 +70,18 @@ class ConsentBanner extends Tags
         }
 
         return $this->index();
+    }
+
+    /**
+     * The {{ AltCookies:AddonAssets }} tag.
+     * Puts the Vite assets on the frontent
+     * @return string|array
+     */
+    public function AddonAssets()
+    {
+        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/enhanced-analytics/dist');
+        //$assets = sprintf('<script data-cfasync=“false” type="module" src="%s"></script>', $vite->asset('resources/js/consent-banner.js'));
+        $assets = sprintf('<link rel="stylesheet" href="%s" />', $vite->asset('resources/css/enhanced-analytics.css'));
+        return $assets;
     }
 }
