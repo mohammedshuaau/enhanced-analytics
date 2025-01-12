@@ -12,7 +12,7 @@ return [
     */
     'cache' => [
         'driver' => env('ENHANCED_ANALYTICS_CACHE_DRIVER', 'file'),
-        
+
         // File driver specific settings
         'file' => [
             'path' => storage_path('app/enhanced-analytics'),
@@ -70,7 +70,7 @@ return [
         'exclude_bots' => true,
         'track_authenticated_users' => true,
         'consent' => [
-            'enabled' => true,
+            'enabled' => false,
             'banner' => [
                 'title' => 'Privacy Notice',
                 'description' => 'We use analytics to understand how you use our website and improve your experience.',
@@ -94,4 +94,4 @@ return [
         'default_date_range' => '7days',
         'refresh_interval' => 300, // seconds
     ],
-]; 
+];

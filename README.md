@@ -4,40 +4,40 @@ A powerful analytics addon for Statamic that provides detailed insights into you
 
 ## Features
 
-### Real-Time Analytics
+### 📊 Real-Time Analytics
 - Page view tracking with automatic data processing
 - Unique visitor identification and session management
 - Configurable processing frequency (default: every 15 minutes)
 - Automatic data aggregation for efficient querying
 
-### Visitor Insights
+### 👥 Visitor Insights
 - Total visits and unique visitors
 - New vs returning visitors
 - Session duration and pages per session
 - Bounce rate and exit rate analysis
 - User flow tracking (entry pages, engaged pages, exit pages)
 
-### Geographic Data
+### 🌍 Geographic Data
 - IP-based geolocation using ip-api.com
 - Country and city-level tracking
 - Built-in rate limiting (45 requests/minute)
 - Automatic caching of geolocation data
 - Configurable cache duration
 
-### Technical Insights
+### 💻 Technical Insights
 - Device type tracking (desktop, mobile, tablet)
 - Browser and platform detection
 - Referrer URL tracking
 - User agent analysis
 
-### Performance Features
+### ⚡ Performance Features
 - Efficient data caching system
-- Support for both file caching
+- Support for file caching
 - Automatic cleanup of old data
 - Chunk-based processing to prevent memory issues
 - Lock system to prevent concurrent processing
 
-### Dashboard Features
+### 🎨 Dashboard Features
 - Clean, modern interface with dark mode support
 - Polled data refresh
 - Customizable date ranges (24h, 7d, 30d, custom)
@@ -45,12 +45,15 @@ A powerful analytics addon for Statamic that provides detailed insights into you
 - Export functionality for detailed analysis
 - Interactive charts and visualizations
 
-### Privacy & Security
+### 🔒 Privacy & Security
+- Built-in consent management system (disabled by default)
 - No external service dependencies
 - Complete data ownership
 - Configurable IP address exclusions
 - Bot filtering
 - Authenticated user tracking options
+- Granular consent controls for visitors
+- Optional geolocation tracking toggle
 
 ## Installation
 
@@ -104,10 +107,77 @@ return [
         ],
         'exclude_ips' => [],
         'exclude_bots' => true,
-        'track_authenticated_users' => true
+        'track_authenticated_users' => true,
+        'consent' => [
+            'enabled' => false, // Set to true to enable consent banner
+            'banner' => [
+                'title' => 'Privacy Notice',
+                'description' => 'We use analytics to understand how you use our website and improve your experience.',
+                'accept_button' => 'Accept',
+                'decline_button' => 'Decline',
+                'settings_button' => 'Customize',
+                'position' => 'bottom', // options: bottom, top, center
+            ],
+        ],
     ]
 ];
 ```
+
+### Consent Banner Configuration
+
+The addon includes a privacy-focused consent banner that's disabled by default. Here's how to configure it:
+
+1. Enable the consent banner by setting `tracking.consent.enabled` to `true` in your config file.
+
+2. Add the consent banner to your layout:
+```antlers
+{{ enhanced_analytics:consent_banner }}
+```
+
+3. Customize the banner appearance and text:
+```php
+'consent' => [
+    'enabled' => true,
+    'banner' => [
+        'title' => 'Your Custom Title',
+        'description' => 'Your custom description about tracking.',
+        'accept_button' => 'Allow Tracking',
+        'decline_button' => 'No Thanks',
+        'settings_button' => 'Preferences',
+        'position' => 'bottom', // Available options: bottom, top, center
+    ],
+],
+```
+
+### Customizing the Consent Banner Template
+
+You can fully customize the consent banner's appearance by publishing and editing its template:
+
+1. Publish the consent banner template:
+```bash
+php artisan vendor:publish --tag="enhanced-analytics-views"
+```
+
+2. Edit the template at:
+```
+resources/views/vendor/enhanced-analytics/components/consent-banner.antlers.html
+```
+
+The template uses Alpine.js for interactivity and Tailwind CSS for styling. You can modify the HTML structure, styling, and behavior while maintaining the core functionality through the following data attributes:
+
+- `x-data="consentBanner"`: The main component
+- `x-model="settings.geolocation"`: Geolocation toggle binding
+- `x-on:click="accept"`: Accept button action
+- `x-on:click="decline"`: Decline button action
+- `x-on:click="toggleSettings"`: Settings toggle action
+
+The consent banner includes:
+- Essential analytics toggle (always enabled)
+- Optional geolocation tracking toggle
+- Persistent settings through session storage
+- Responsive design with dark mode support
+
+When enabled, tracking will only begin after the visitor provides consent. Their preferences are saved and respected across sessions.
 
 ## Usage
 
