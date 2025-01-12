@@ -2,6 +2,21 @@
     "name": "mohammedshuaau/enhanced-analytics",
     "description": "A powerful, efficient analytics solution for Statamic with real-time tracking, caching, and comprehensive dashboard visualization.",
     "type": "statamic-addon",
+    "keywords": [
+        "statamic",
+        "statamic-addon",
+        "analytics",
+        "enhanced-analytics",
+        "enhanced",
+        "real-time",
+        "tracking",
+        "cache",
+        "performance",
+        "dashboard",
+        "chart",
+        "chartjs",
+        "alpinejs"
+    ],
     "autoload": {
         "psr-4": {
             "Mohammedshuaau\\EnhancedAnalytics\\": "src"
