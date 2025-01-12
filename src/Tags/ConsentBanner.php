@@ -24,21 +24,7 @@ class ConsentBanner extends Tags
      * The {{ enhanced_analytics }} tag
      */
     public function index()
-    {   
-        // Add debug logging
-        Log::debug('ConsentBanner tag rendering', [
-            'view_exists_namespaced' => View::exists('enhanced-analytics::components.consent-banner'),
-            'view_exists_direct' => View::exists('components/consent-banner'),
-            'view_paths' => View::getFinder()->getPaths(),
-            'template_path' => $this->getTemplatePath(),
-            'template_exists' => File::exists($this->getTemplatePath()),
-            'template_content' => File::exists($this->getTemplatePath()) ? File::get($this->getTemplatePath()) : null,
-            'template_data' => [
-                'now' => now()->toDateTimeString(),
-                'config' => config('enhanced-analytics.tracking.consent.banner')
-            ]
-        ]);
-
+    {
         try {
             // Get the template content directly
             $templatePath = $this->getTemplatePath();
@@ -86,4 +72,4 @@ class ConsentBanner extends Tags
 
         return $this->index();
     }
-} 
+}

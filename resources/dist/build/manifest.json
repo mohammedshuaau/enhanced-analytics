@@ -4,7 +4,7 @@
     "name": "alpine"
   },
   "resources/js/consent-banner.js": {
-    "file": "assets/consent-banner-af7rND8f.js",
+    "file": "assets/consent-banner-DvFjGeih.js",
     "name": "consent-banner",
     "src": "resources/js/consent-banner.js",
     "isEntry": true,
@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/enhanced-analytics.js": {
-    "file": "assets/enhanced-analytics-DR3kBP2L.js",
+    "file": "assets/enhanced-analytics-EmtDDgVv.js",
     "name": "enhanced-analytics",
     "src": "resources/js/enhanced-analytics.js",
     "isEntry": true,
