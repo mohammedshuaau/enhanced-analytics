@@ -23,13 +23,8 @@ class TrackPageVisit
     protected function getGeolocationData($ipAddress)
     {
         try {
-            Log::debug('Enhanced Analytics: Getting geolocation data', [
-                'ip_address' => $ipAddress
-            ]);
-
             // Skip for localhost/private IPs
             if (in_array($ipAddress, ['127.0.0.1', '::1']) || filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-                Log::debug('Enhanced Analytics: Skipping geolocation for local/private IP');
                 return [
                     'country_code' => null,
                     'country_name' => null,
@@ -57,18 +52,8 @@ class TrackPageVisit
                     // Increment rate limit counter
                     Cache::put($rateLimitKey . '_' . $currentMinute, $requestCount + 1, 60);
 
-                    Log::debug('Enhanced Analytics: Calling IP-API', [
-                        'ip_address' => $ipAddress,
-                        'url' => "http://ip-api.com/json/{$ipAddress}?fields=status,message,countryCode,country,city"
-                    ]);
-
                     $response = file_get_contents("http://ip-api.com/json/{$ipAddress}?fields=status,message,countryCode,country,city");
                     $data = json_decode($response, true);
-
-                    Log::debug('Enhanced Analytics: IP-API response', [
-                        'response' => $response,
-                        'decoded_data' => $data
-                    ]);
 
                     if ($data && isset($data['status']) && $data['status'] === 'success') {
                         // Store successful lookup in analytics
@@ -78,9 +63,6 @@ class TrackPageVisit
                             'country_name' => $data['country'] ?? null,
                             'city' => $data['city'] ?? null
                         ];
-                        Log::debug('Enhanced Analytics: Geolocation data retrieved', [
-                            'geo_data' => $geoData
-                        ]);
                         return $geoData;
                     }
 
@@ -114,7 +96,7 @@ class TrackPageVisit
         // Try to get from historical data
         $historicalKey = 'enhanced_analytics_historical_geo';
         $historicalData = Cache::get($historicalKey, []);
-        
+
         return $historicalData[$ipAddress] ?? [
             'country_code' => null,
             'country_name' => null,
@@ -165,7 +147,7 @@ class TrackPageVisit
     {
         $pattern = 'enhanced_analytics_geo_*';
         $keys = Cache::get('enhanced_analytics_cache_keys', []);
-        
+
         foreach ($keys as $key) {
             if (Str::is($pattern, $key)) {
                 Cache::forget($key);
@@ -179,27 +161,14 @@ class TrackPageVisit
     public function handle(Request $request, Closure $next)
     {
         try {
-            Log::debug('Enhanced Analytics: Middleware called', [
-                'path' => $request->path(),
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'session_data' => [
-                    'visitor_id' => $request->session()->get('visitor_id'),
-                    'visited_pages' => $request->session()->get('visited_pages'),
-                    'last_visit_date' => $request->session()->get('last_visit_date'),
-                    'last_visit_hour' => $request->session()->get('last_visit_hour')
-                ]
-            ]);
 
             if ($this->shouldTrack($request)) {
-                Log::debug('Enhanced Analytics: Request should be tracked');
-                
+
                 // Get current timestamp
                 $now = now();
-                
+
                 // Force session regeneration for fresh tracking
                 if (!$request->session()->has('analytics_session_started')) {
-                    Log::debug('Enhanced Analytics: Regenerating session for fresh tracking');
                     $request->session()->invalidate();
                     $request->session()->regenerate();
                     $request->session()->put('analytics_session_started', true);
@@ -208,9 +177,8 @@ class TrackPageVisit
                 // Generate or get visitor ID
                 $isNewVisitor = !$request->session()->has('visitor_id');
                 $visitorId = $isNewVisitor ? (string) Str::uuid() : $request->session()->get('visitor_id');
-                
+
                 if ($isNewVisitor) {
-                    Log::debug('Enhanced Analytics: New visitor detected');
                     $request->session()->put('visitor_id', $visitorId);
                     $request->session()->put('visited_pages', []);
                     $request->session()->put('last_visit_date', null);
@@ -226,14 +194,6 @@ class TrackPageVisit
                 // Get visited pages from session
                 $visitedPages = $request->session()->get('visited_pages', []);
                 $isNewPageVisit = !in_array($pageUrl, $visitedPages);
-
-                Log::debug('Enhanced Analytics: Page visit check', [
-                    'page_url' => $pageUrl,
-                    'visited_pages' => $visitedPages,
-                    'is_new_page_visit' => $isNewPageVisit,
-                    'is_new_visitor' => $isNewVisitor,
-                    'session_id' => $request->session()->getId()
-                ]);
 
                 // Update visited pages before creating visit data
                 if ($isNewPageVisit) {
@@ -266,32 +226,13 @@ class TrackPageVisit
                     'visited_at' => $now->format('Y-m-d H:i:s'),
                 ];
 
-                Log::debug('Enhanced Analytics: Visit data prepared', [
-                    'geo_data' => $geoData,
-                    'visit_data' => $visitData,
-                    'visited_pages' => $visitedPages,
-                    'is_new_visitor' => $isNewVisitor,
-                    'is_new_page_visit' => $isNewPageVisit,
-                    'last_visit_date' => $lastVisitDate,
-                    'last_visit_hour' => $lastVisitHour,
-                    'session_id' => $request->session()->getId()
-                ]);
-
                 // Update session data
                 $request->session()->put('last_visit_date', $now);
                 $request->session()->put('last_visit_hour', $now);
 
                 $this->storeVisit($visitData);
             } else {
-                Log::debug('Enhanced Analytics: Request should not be tracked', [
-                    'path' => $request->path(),
-                    'excluded_paths' => config('enhanced-analytics.tracking.exclude_paths', []),
-                    'excluded_ips' => config('enhanced-analytics.tracking.exclude_ips', []),
-                    'is_bot' => $this->agent->isRobot(),
-                    'exclude_bots' => config('enhanced-analytics.tracking.exclude_bots', true),
-                    'is_authenticated' => auth()->check(),
-                    'track_authenticated' => config('enhanced-analytics.tracking.track_authenticated_users', true)
-                ]);
+
             }
         } catch (\Exception $e) {
             Log::error('Enhanced Analytics: Error in middleware', [
@@ -355,17 +296,9 @@ class TrackPageVisit
             $key = 'analytics_' . now()->format('Y_m_d_H_i');
             $path = $this->getCachePath($key);
 
-            Log::debug('Enhanced Analytics: Storing visit data', [
-                'key' => $key,
-                'path' => $path,
-                'config_path' => config('enhanced-analytics.cache.file.path'),
-                'visit_data' => $visitData
-            ]);
-
             // Ensure directory exists
             $directory = dirname($path);
             if (!File::exists($directory)) {
-                Log::debug('Enhanced Analytics: Creating directory', ['directory' => $directory]);
                 File::makeDirectory($directory, 0755, true);
             }
 
@@ -381,7 +314,6 @@ class TrackPageVisit
                     ]);
                     $data = [];
                 }
-                Log::debug('Enhanced Analytics: Found existing data', ['count' => count($data)]);
             }
 
             // Append new visit
@@ -398,10 +330,6 @@ class TrackPageVisit
             }
 
             File::put($path, $jsonData);
-            Log::debug('Enhanced Analytics: Stored visit data', [
-                'total_visits' => count($data),
-                'json_size' => strlen($jsonData)
-            ]);
 
             // Update cache index
             $this->updateCacheIndex($key);
@@ -431,4 +359,4 @@ class TrackPageVisit
         $keys[] = $newKey;
         File::put($indexPath, json_encode(array_unique($keys)));
     }
-} 
+}

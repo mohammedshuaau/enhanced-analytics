@@ -2,11 +2,10 @@
 
 namespace Mohammedshuaau\EnhancedAnalytics;
 
-use Statamic\Providers\AddonServiceProvider;
-use Statamic\Facades\CP\Nav;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
-use Statamic\Statamic;
+use Statamic\Facades\CP\Nav;
+use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -15,7 +14,7 @@ class ServiceProvider extends AddonServiceProvider
     ];
 
     protected $routes = [
-        'cp' => __DIR__.'/../routes/cp.php',
+        'cp' => __DIR__ . '/../routes/cp.php',
     ];
 
     protected $middleware = [
@@ -45,12 +44,12 @@ class ServiceProvider extends AddonServiceProvider
     {
         // Publish configuration
         $this->publishes([
-            __DIR__.'/../config/enhanced-analytics.php' => config_path('enhanced-analytics.php'),
+            __DIR__ . '/../config/enhanced-analytics.php' => config_path('enhanced-analytics.php'),
         ], 'enhanced-analytics-config');
 
         // Merge configuration early so we can use it
         $this->mergeConfigFrom(
-            __DIR__.'/../config/enhanced-analytics.php', 'enhanced-analytics'
+            __DIR__ . '/../config/enhanced-analytics.php', 'enhanced-analytics'
         );
 
         // Ensure storage directory exists with proper permissions (if using file driver)
@@ -65,10 +64,24 @@ class ServiceProvider extends AddonServiceProvider
         });
 
         // Load views
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'enhanced-analytics');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'enhanced-analytics');
 
         // Load migrations
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        // Register scheduled tasks
+        $this->app->booted(function () {
+            $schedule = $this->app->make(Schedule::class);
+            $frequency = config('enhanced-analytics.processing.frequency', 15);
+
+            // Generate the cron expression for custom minutes
+            $cronExpression = "*/{$frequency} * * * *";
+
+            $schedule->command('analytics:process')
+                ->withoutOverlapping()
+                ->appendOutputTo(storage_path('logs/analytics-scheduler.log'))
+                ->cron($cronExpression);
+        });
     }
 
     protected function ensureStorageDirectoryExists()
@@ -78,7 +91,7 @@ class ServiceProvider extends AddonServiceProvider
             if (config('enhanced-analytics.cache.driver') === 'file') {
                 $path = config('enhanced-analytics.cache.file.path', storage_path('app/enhanced-analytics'));
                 $permissions = config('enhanced-analytics.cache.file.permissions.directory', 0755);
-                
+
                 if (!File::exists($path)) {
                     File::makeDirectory($path, $permissions, true);
                 }

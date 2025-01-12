@@ -108,17 +108,6 @@ class AnalyticsDashboardController
             ->orderBy('date')
             ->get();
 
-        Log::debug('Page Views Data:', [
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'data' => $data,
-            'raw_sample' => DB::table('enhanced_analytics_page_views')
-                ->select('page_url', 'is_new_page_visit', 'visited_at')
-                ->whereBetween('visited_at', [$startDate, $endDate])
-                ->limit(10)
-                ->get()
-        ]);
-
         return $data;
     }
 

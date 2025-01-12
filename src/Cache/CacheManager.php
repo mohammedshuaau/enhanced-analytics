@@ -33,7 +33,7 @@ class CacheManager
     {
         // Set default storage path
         $this->defaultConfig['file']['path'] = storage_path('app/enhanced-analytics');
-        
+
         // Merge default config with user config
         $this->config = array_merge(
             $this->defaultConfig,
@@ -51,7 +51,7 @@ class CacheManager
         );
 
         $this->driver = $this->config['driver'];
-        
+
         if ($this->driver === 'file') {
             $this->ensureStorageDirectory();
         }
@@ -105,7 +105,7 @@ class CacheManager
         try {
             $prefix = $this->config['redis']['prefix'];
             $connection = $this->config['redis']['connection'];
-            
+
             Cache::store('redis')
                 ->connection($connection)
                 ->put($prefix . $key, $data, $this->config['ttl']);
@@ -119,7 +119,7 @@ class CacheManager
         try {
             $prefix = $this->config['redis']['prefix'];
             $connection = $this->config['redis']['connection'];
-            
+
             return Cache::store('redis')
                 ->connection($connection)
                 ->get($prefix . $key, []);
@@ -135,7 +135,7 @@ class CacheManager
             $connection = $this->config['redis']['connection'];
             $existingData = $this->getRedis($key);
             $existingData[] = $data;
-            
+
             $this->storeRedis($key, $existingData);
         } catch (\Exception $e) {
             throw new RuntimeException("Failed to append data to Redis: {$e->getMessage()}");
@@ -147,7 +147,7 @@ class CacheManager
         try {
             $prefix = $this->config['redis']['prefix'];
             $connection = $this->config['redis']['connection'];
-            
+
             Cache::store('redis')
                 ->connection($connection)
                 ->forget($prefix . $key);
@@ -161,7 +161,7 @@ class CacheManager
         try {
             $prefix = $this->config['redis']['prefix'];
             $connection = $this->config['redis']['connection'];
-            
+
             $pattern = $prefix . '*';
             return Redis::connection($connection)->keys($pattern);
         } catch (\Exception $e) {
@@ -173,11 +173,6 @@ class CacheManager
     {
         try {
             $path = $this->getFilePath($key);
-            Log::debug('Enhanced Analytics: Storing file data', [
-                'key' => $key,
-                'path' => $path,
-                'data' => $data
-            ]);
             File::put($path, json_encode($data), true);
             chmod($path, $this->config['file']['permissions']['file']);
         } catch (\Exception $e) {
@@ -193,20 +188,11 @@ class CacheManager
     {
         try {
             $path = $this->getFilePath($key);
-            Log::debug('Enhanced Analytics: Getting file data', [
-                'key' => $key,
-                'path' => $path,
-                'exists' => File::exists($path)
-            ]);
             if (!File::exists($path)) {
                 return [];
             }
             $content = File::get($path);
             $data = json_decode($content, true) ?: [];
-            Log::debug('Enhanced Analytics: Retrieved file data', [
-                'key' => $key,
-                'data' => $data
-            ]);
             return $data;
         } catch (\Exception $e) {
             Log::error('Enhanced Analytics: Failed to retrieve data from file', [
@@ -273,7 +259,7 @@ class CacheManager
     {
         try {
             $path = $this->config['file']['path'];
-            
+
             if (!File::exists($path)) {
                 File::makeDirectory($path, $this->config['file']['permissions']['directory'], true);
             }
@@ -322,4 +308,4 @@ class CacheManager
     {
         // Redis handles TTL automatically, no need for manual cleanup
     }
-} 
+}

@@ -37,7 +37,7 @@ class ProcessAnalytics extends Command
             }
 
             $keys = $this->cache->getAllKeys();
-            
+
             if (empty($keys)) {
                 $this->info('No analytics data to process.');
                 return;
@@ -50,7 +50,7 @@ class ProcessAnalytics extends Command
             foreach ($keys as $key) {
                 try {
                     $visits = $this->cache->get($key);
-                    
+
                     if (empty($visits)) {
                         $this->cache->delete($key);
                         continue;
@@ -61,7 +61,7 @@ class ProcessAnalytics extends Command
                         DB::transaction(function () use ($chunk) {
                             $this->processVisits($chunk);
                         });
-                        
+
                         $processedCount += count($chunk);
                     }
 
@@ -97,12 +97,7 @@ class ProcessAnalytics extends Command
     {
         try {
             $now = Carbon::now();
-            
-            Log::debug('Enhanced Analytics: Processing visits', [
-                'count' => count($visits),
-                'first_visit' => isset($visits[0]) ? $visits[0] : null
-            ]);
-            
+
             // Prepare bulk insert data
             $records = array_map(function ($visit) use ($now) {
                 if (!is_array($visit)) {
@@ -112,13 +107,13 @@ class ProcessAnalytics extends Command
                     ]);
                     return null;
                 }
-                
+
                 // Ensure user_id is either null or a numeric value
                 $userId = isset($visit['user_id']) && is_numeric($visit['user_id']) ? $visit['user_id'] : null;
-                
+
                 // Format the visited_at datetime
                 $visitedAt = isset($visit['visited_at']) ? Carbon::parse($visit['visited_at'])->format('Y-m-d H:i:s') : $now->format('Y-m-d H:i:s');
-                
+
                 return array_merge($visit, [
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -134,11 +129,6 @@ class ProcessAnalytics extends Command
                 Log::warning('Enhanced Analytics: No valid records to process');
                 return;
             }
-
-            Log::debug('Enhanced Analytics: Prepared records for insertion', [
-                'count' => count($records),
-                'sample' => isset($records[0]) ? $records[0] : null
-            ]);
 
             // Bulk insert
             DB::table('enhanced_analytics_page_views')->insert($records);
@@ -163,11 +153,6 @@ class ProcessAnalytics extends Command
             'platform'
         ];
 
-        Log::debug('Enhanced Analytics: Processing aggregates', [
-            'total_visits' => count($visits),
-            'dimensions' => $dimensions
-        ]);
-
         foreach ($visits as $visit) {
             if (!is_array($visit)) {
                 Log::warning('Enhanced Analytics: Invalid visit data in aggregates', [
@@ -181,19 +166,10 @@ class ProcessAnalytics extends Command
 
             foreach ($dimensions as $dimension) {
                 if (!isset($visit[$dimension]) || empty($visit[$dimension])) {
-                    Log::debug('Enhanced Analytics: Missing dimension value', [
-                        'dimension' => $dimension,
-                        'visit' => $visit
-                    ]);
                     continue;
                 }
 
                 $value = $visit[$dimension];
-                Log::debug('Enhanced Analytics: Processing dimension', [
-                    'dimension' => $dimension,
-                    'value' => $value,
-                    'date' => $date
-                ]);
 
                 $this->updateAggregate('daily', $date, $dimension, $value, $visit);
             }
@@ -203,14 +179,6 @@ class ProcessAnalytics extends Command
     protected function updateAggregate($type, $date, $dimension, $value, array $visit)
     {
         try {
-            Log::debug('Enhanced Analytics: Updating aggregate', [
-                'type' => $type,
-                'date' => $date,
-                'dimension' => $dimension,
-                'value' => $value,
-                'visit' => $visit
-            ]);
-
             DB::table('enhanced_analytics_aggregates')
                 ->updateOrInsert(
                     [
@@ -228,7 +196,6 @@ class ProcessAnalytics extends Command
                     ]
                 );
 
-            Log::debug('Enhanced Analytics: Updated aggregate successfully');
         } catch (\Exception $e) {
             Log::error('Enhanced Analytics: Error updating aggregate', [
                 'error' => $e->getMessage(),
@@ -237,4 +204,4 @@ class ProcessAnalytics extends Command
             throw $e;
         }
     }
-} 
+}
