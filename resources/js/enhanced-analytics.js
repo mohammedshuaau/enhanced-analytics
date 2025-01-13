@@ -220,7 +220,7 @@ function updateComparisonStats(comparisons) {
         const change = value >= 0 ? `+${value}%` : `${value}%`;
         const color = value >= 0 ? 'text-green-600' : 'text-red-600';
         element.textContent = `${change} vs previous period`;
-        element.className = `text-sm ${color}`;
+        element.className = `text-sm ea-text-secondary ${color}`;
     }
 }
 
