@@ -41,10 +41,8 @@ class ServiceProvider extends AddonServiceProvider
         'input' => [
             'resources/css/enhanced-analytics.css',
             'resources/js/enhanced-analytics.js'
-
         ],
-        'publicDirectory' => 'public',
-        'buildDirectory' => 'dist'
+        'publicDirectory' => 'resources/dist',
     ];
 
     public function bootAddon()
