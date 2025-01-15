@@ -39,8 +39,8 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $vite = [
         'input' => [
-            'resources/css/enhanced-analytics.css',
-            'resources/js/enhanced-analytics.js'
+            'resources/js/enhanced-analytics.js',
+            'resources/css/enhanced-analytics.css'
         ],
         'publicDirectory' => 'resources/dist',
     ];

@@ -3,7 +3,7 @@
 @section('title', 'Enhanced Analytics')
 
 @push('styles')
-    @vite('resources/css/enhanced-analytics.css')
+    @vite('resources/css/enhanced-analytics.css', 'vendor/enhanced-analytics/build')
 @endpush
 
 @section('content')
@@ -252,5 +252,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/enhanced-analytics.js')
+    @vite('resources/js/enhanced-analytics.js', 'vendor/enhanced-analytics/build')
 @endpush
