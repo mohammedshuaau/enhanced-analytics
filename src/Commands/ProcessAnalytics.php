@@ -179,23 +179,38 @@ class ProcessAnalytics extends Command
     protected function updateAggregate($type, $date, $dimension, $value, array $visit)
     {
         try {
-            DB::table('enhanced_analytics_aggregates')
-                ->updateOrInsert(
-                    [
-                        'type' => $type,
-                        'date' => $date,
-                        'dimension' => $dimension,
-                        'dimension_value' => $value,
-                    ],
-                    [
-                        'total_visits' => DB::raw('COALESCE(total_visits, 0) + 1'),
-                        'unique_visitors' => DB::raw('COALESCE(unique_visitors, 0) + ' . ($visit['is_new_visitor'] ? '1' : '0')),
-                        'unique_page_views' => DB::raw('COALESCE(unique_page_views, 0) + ' . ($visit['is_new_page_visit'] ? '1' : '0')),
-                        'returning_visitors' => DB::raw('COALESCE(returning_visitors, 0) + ' . (!$visit['is_new_visitor'] ? '1' : '0')),
-                        'updated_at' => Carbon::now(),
-                    ]
-                );
+            $record = DB::table('enhanced_analytics_aggregates')
+                ->where([
+                    'type' => $type,
+                    'date' => $date,
+                    'dimension' => $dimension,
+                    'dimension_value' => $value,
+                ])
+                ->first();
 
+            if ($record) {
+                DB::table('enhanced_analytics_aggregates')
+                    ->where('id', $record->id)
+                    ->update([
+                        'total_visits' => $record->total_visits + 1,
+                        'unique_visitors' => $record->unique_visitors + ($visit['is_new_visitor'] ? 1 : 0),
+                        'unique_page_views' => $record->unique_page_views + ($visit['is_new_page_visit'] ? 1 : 0),
+                        'returning_visitors' => $record->returning_visitors + (!$visit['is_new_visitor'] ? 1 : 0),
+                        'updated_at' => Carbon::now(),
+                    ]);
+            } else {
+                DB::table('enhanced_analytics_aggregates')->insert([
+                    'type' => $type,
+                    'date' => $date,
+                    'dimension' => $dimension,
+                    'dimension_value' => $value,
+                    'total_visits' => 1,
+                    'unique_visitors' => $visit['is_new_visitor'] ? 1 : 0,
+                    'unique_page_views' => $visit['is_new_page_visit'] ? 1 : 0,
+                    'returning_visitors' => !$visit['is_new_visitor'] ? 1 : 0,
+                    'updated_at' => Carbon::now(),
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('Enhanced Analytics: Error updating aggregate', [
                 'error' => $e->getMessage(),
