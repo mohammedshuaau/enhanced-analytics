@@ -58,6 +58,11 @@ class ServiceProvider extends AddonServiceProvider
             __DIR__ . '/../config/enhanced-analytics.php', 'enhanced-analytics'
         );
 
+        // Publish views/components
+        $this->publishes([
+            __DIR__ . '/../resources/views/components/consent-banner.antlers.html' => resource_path('views/vendor/enhanced-analytics/components/consent-banner.antlers.html'),
+        ], 'enhanced-analytics-views');
+
         // Ensure storage directory exists with proper permissions (if using file driver)
         $this->ensureStorageDirectoryExists();
 

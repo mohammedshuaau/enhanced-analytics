@@ -60,7 +60,12 @@ class ConsentBanner extends Tags
 
     protected function getTemplatePath()
     {
-        return __DIR__ . '/../../resources/views/components/consent-banner.antlers.html';
+        $exportedComponentPath = resource_path('views/vendor/enhanced-analytics/components/consent-banner.antlers.html');
+        if (file_exists($exportedComponentPath)) {
+            return $exportedComponentPath;
+        } else {
+            return __DIR__ . '/../../resources/views/components/consent-banner.antlers.html';
+        }
     }
 
     public function wildcard($method)
