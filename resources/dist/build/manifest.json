@@ -4,6 +4,12 @@
     "src": "resources/css/enhanced-analytics.css",
     "isEntry": true
   },
+  "resources/js/consent-banner.js": {
+    "file": "assets/consent-banner-adD1y8i4.js",
+    "name": "consent-banner",
+    "src": "resources/js/consent-banner.js",
+    "isEntry": true
+  },
   "resources/js/enhanced-analytics.js": {
     "file": "assets/enhanced-analytics-KsvtuIol.js",
     "name": "enhanced-analytics",

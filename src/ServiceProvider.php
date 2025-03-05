@@ -39,6 +39,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $vite = [
         'input' => [
+            'resources/js/consent-banner.js',
             'resources/js/enhanced-analytics.js',
             'resources/css/enhanced-analytics.css'
         ],
@@ -51,14 +52,6 @@ class ServiceProvider extends AddonServiceProvider
         $this->publishes([
             __DIR__ . '/../config/enhanced-analytics.php' => config_path('enhanced-analytics.php'),
         ], 'enhanced-analytics-config');
-
-        // Publish views
-        $this->publishes([
-            __DIR__ . '/../resources/views/components/consent-banner.antlers.html' => resource_path('views/vendor/enhanced-analytics/components/consent-banner.antlers.html'),
-        ], 'enhanced-analytics-views');
-
-        // Load views
-        $this->loadViewsFrom(__DIR__ . '/../resources/views/components', 'enhanced-analytics');
 
         // Merge configuration early so we can use it
         $this->mergeConfigFrom(

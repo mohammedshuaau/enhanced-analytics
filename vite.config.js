@@ -5,6 +5,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+                'resources/js/consent-banner.js',
                 'resources/js/enhanced-analytics.js',
                 'resources/css/enhanced-analytics.css'
             ],

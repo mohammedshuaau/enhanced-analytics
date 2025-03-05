@@ -79,9 +79,9 @@ class ConsentBanner extends Tags
      */
     public function AddonAssets()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/enhanced-analytics/dist');
-        //$assets = sprintf('<script data-cfasync=“false” type="module" src="%s"></script>', $vite->asset('resources/js/consent-banner.js'));
-        $assets = sprintf('<link rel="stylesheet" href="%s" />', $vite->asset('resources/css/enhanced-analytics.css'));
-        return $assets;
+//        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/enhanced-analytics/dist');
+//        //$assets = sprintf('<script data-cfasync=“false” type="module" src="%s"></script>', $vite->asset('resources/js/consent-banner.js'));
+//        $assets = sprintf('<link rel="stylesheet" href="%s" />', $vite->asset('resources/css/enhanced-analytics.css'));
+//        return $assets;
     }
 }
