@@ -208,9 +208,9 @@ function updateComparisonStats(comparisons) {
     if (!comparisons) return;
 
     const elements = {
-        totalVisitsChange: ['totalVisitsChange', comparisons.total_visits],
-        uniqueVisitorsChange: ['uniqueVisitorsChange', comparisons.unique_visitors],
-        bounceRateChange: ['bounceRateChange', comparisons.bounce_rate]
+        totalVisitsChange: [comparisons.total_visits],
+        uniqueVisitorsChange: [comparisons.unique_visitors],
+        bounceRateChange: [comparisons.bounce_rate]
     };
 
     for (const [id, value] of Object.entries(elements)) {

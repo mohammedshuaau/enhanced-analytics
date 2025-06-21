@@ -229,7 +229,7 @@ class AnalyticsDashboardController
             if ($sessionVisits->count() > 1) {
                 $firstVisit = Carbon::parse($sessionVisits->first()->visited_at);
                 $lastVisit = Carbon::parse($sessionVisits->last()->visited_at);
-                $totalTime += $lastVisit->diffInSeconds($firstVisit);
+                $totalTime += $firstVisit->diffInSeconds($lastVisit);
                 $sessionCount++;
             }
         }

@@ -2,7 +2,7 @@
 
 namespace Mohammedshuaau\EnhancedAnalytics\Tags;
 
-use Illuminate\Foundation\Vite;
+// use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\Log;
 use Statamic\Facades\File;
 use Statamic\Tags\Tags;
