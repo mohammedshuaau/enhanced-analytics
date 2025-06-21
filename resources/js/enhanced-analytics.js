@@ -204,21 +204,36 @@ function updateDashboard(data) {
     if (data.user_flow) updateUserFlow(data.user_flow);
 }
 
+
 function updateComparisonStats(comparisons) {
     if (!comparisons) return;
 
     const elements = {
-        totalVisitsChange: ['totalVisitsChange', comparisons.total_visits],
-        uniqueVisitorsChange: ['uniqueVisitorsChange', comparisons.unique_visitors],
-        bounceRateChange: ['bounceRateChange', comparisons.bounce_rate]
+        totalVisitsChange: {
+            v: comparisons.total_visits,
+            positiveGood: true
+        },
+        uniqueVisitorsChange: {
+            v: comparisons.unique_visitors,
+            positiveGood: true
+        },
+        bounceRateChange: {
+            v: comparisons.bounce_rate,
+            positiveGood: false
+        },
     };
 
     for (const [id, value] of Object.entries(elements)) {
         const element = document.getElementById(id);
         if (!element) continue;
 
-        const change = value >= 0 ? `+${value}%` : `${value}%`;
-        const color = value >= 0 ? 'text-green-600' : 'text-red-600';
+
+        const isPositive = value.v >= 0;
+        const change = isPositive ? `+${value.v}%` : `${value.v}%`;
+        const color =
+            (isPositive && value.positiveGood) || (!isPositive && !value.positiveGood)
+                ? 'text-green-600'
+                : 'text-red-600';
         element.textContent = `${change} vs previous period`;
         element.className = `text-sm ea-text-secondary ${color}`;
     }
